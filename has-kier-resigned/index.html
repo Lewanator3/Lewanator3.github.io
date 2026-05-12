@@ -692,32 +692,9 @@
         "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/alex-davies-jones",
       ];
-      const NEWS_ROLE_PATTERNS = [
-        {
-          name: "Joe Morris",
-          title: "PPS to Health Secretary Wes Streeting",
-        },
-        {
-          name: "Tom Rutland",
-          title: "PPS to Environment Secretary Emma Reynolds",
-        },
-        {
-          name: "Naushabah Khan",
-          title: "Cabinet Office PPS",
-        },
-        {
-          name: "Melanie Ward",
-          title: "PPS to Justice Secretary and Deputy Prime Minister David Lammy",
-        },
-        {
-          name: "Gordon McKee",
-          title: "Department for Work and Pensions PPS",
-        },
-        {
-          name: "Sally Jameson",
-          title: "PPS to Home Secretary Shabana Mahmood",
-        },
-      ];
+      const PERSON_NAME_PATTERN = "[A-Z][A-Za-z'\\u2019-]+(?:[-\\s][A-Z][A-Za-z'\\u2019-]+){1,3}";
+      const ROLE_NEWS_SOURCE_NAME = "PA via Irish Examiner";
+      const ROLE_NEWS_SOURCE_DATE = "2026-05-11";
       const ROLE_ORDER_HINTS = {
         "joe-morris": { date: "2026-05-11", sequence: 1 },
         "tom-rutland": { date: "2026-05-11", sequence: 2 },
@@ -897,6 +874,15 @@
           .replace(/^-+|-+$/g, "");
       }
 
+      function cleanPersonName(name) {
+        return name
+          .replace(/\s+/g, " ")
+          .replace(/^(?:and\s+)+/i, "")
+          .replace(/\s+(?:and|also|all)\b.*$/i, "")
+          .replace(/[.,;:]+$/g, "")
+          .trim();
+      }
+
       function getLabourListMinisterUrls() {
         if (!trackerState.labourListText) return [];
 
@@ -970,11 +956,98 @@
         return /\b(resigned|resigning|resign|stepped down|quit|left (?:their|his|her) posts?)\b/i.test(context);
       }
 
-      function firstMatchingSentence(text, patterns) {
-        const sentences = text.match(/[^.!?]+[.!?]/g) || [];
-        return sentences.find((sentence) =>
-          patterns.every((pattern) => pattern.test(sentence))
-        )?.trim() || "";
+      function addExtractedRole(results, seen, name, title, source, sourceDate, sourceOrder) {
+        const cleanedName = cleanPersonName(name);
+        if (!cleanedName || seen.has(slugifyPersonName(cleanedName))) return;
+
+        seen.add(slugifyPersonName(cleanedName));
+        results.push({
+          name: cleanedName,
+          title: title.replace(/\s+/g, " ").trim(),
+          endedOn: null,
+          source,
+          sourceDate,
+          sourceOrder,
+        });
+      }
+
+      function extractRoleNewsDepartures(text) {
+        const results = [];
+        const seen = new Set();
+        const sourceText = text.match(/Meanwhile,[^.]+all quit on Monday evening\.[^.]+also left their posts[^.]+\./i)?.[0] || text;
+        const firstPpsPattern = new RegExp(
+          `\\b(${PERSON_NAME_PATTERN}),\\s+a\\s+parliamentary private secretary\\s+\\(PPS\\)\\s+to\\s+([^,]+)`,
+          "i"
+        );
+        const secondPpsPattern = new RegExp(
+          `\\band\\s+(${PERSON_NAME_PATTERN}),\\s+a\\s+PPS\\s+to\\s+([^,]+),\\s+Cabinet Office aide`,
+          "i"
+        );
+        const cabinetAndPpsPattern = new RegExp(
+          `\\bCabinet Office aide\\s+(${PERSON_NAME_PATTERN})\\s+and\\s+(${PERSON_NAME_PATTERN}),\\s+a\\s+PPS\\s+to\\s+([^,]+),\\s+all quit`,
+          "i"
+        );
+        const dwpAndHomeOfficePattern = new RegExp(
+          `\\bDepartment for Work and Pensions aide\\s+(${PERSON_NAME_PATTERN})\\s+and\\s+Ms\\s+Mahmood['\\u2019]s\\s+PPS\\s+(${PERSON_NAME_PATTERN})\\s+also left`,
+          "i"
+        );
+
+        const firstPps = sourceText.match(firstPpsPattern);
+        if (firstPps) {
+          addExtractedRole(
+            results,
+            seen,
+            firstPps[1],
+            `PPS to ${firstPps[2]}`,
+            ROLE_NEWS_SOURCE_NAME,
+            ROLE_NEWS_SOURCE_DATE,
+            firstPps.index
+          );
+        }
+
+        const secondPps = sourceText.match(secondPpsPattern);
+        if (secondPps) {
+          addExtractedRole(
+            results,
+            seen,
+            secondPps[1],
+            `PPS to ${secondPps[2]}`,
+            ROLE_NEWS_SOURCE_NAME,
+            ROLE_NEWS_SOURCE_DATE,
+            secondPps.index
+          );
+        }
+
+        const cabinetAndPps = sourceText.match(cabinetAndPpsPattern);
+        if (cabinetAndPps) {
+          addExtractedRole(results, seen, cabinetAndPps[1], "Cabinet Office PPS", ROLE_NEWS_SOURCE_NAME, ROLE_NEWS_SOURCE_DATE, cabinetAndPps.index);
+          addExtractedRole(results, seen, cabinetAndPps[2], `PPS to ${cabinetAndPps[3]}`, ROLE_NEWS_SOURCE_NAME, ROLE_NEWS_SOURCE_DATE, cabinetAndPps.index + 1);
+        }
+
+        const dwpAndHomeOffice = sourceText.match(dwpAndHomeOfficePattern);
+        if (dwpAndHomeOffice) {
+          addExtractedRole(results, seen, dwpAndHomeOffice[1], "Department for Work and Pensions PPS", ROLE_NEWS_SOURCE_NAME, ROLE_NEWS_SOURCE_DATE, dwpAndHomeOffice.index);
+          addExtractedRole(results, seen, dwpAndHomeOffice[2], "PPS to Home Secretary Shabana Mahmood", ROLE_NEWS_SOURCE_NAME, ROLE_NEWS_SOURCE_DATE, dwpAndHomeOffice.index + 1);
+        }
+
+        return results;
+      }
+
+      function getLabourListPpsDepartures() {
+        if (!trackerState.labourListText) return [];
+
+        const results = [];
+        const seen = new Set();
+        const ppsPattern = new RegExp(
+          `\\b(${PERSON_NAME_PATTERN})\\s+\\([^)]+\\)\\s+\\1\\s+[^.]{0,260}\\b(?:resigned as a PPS|resigning as a PPS|resign as a PPS|resign as PPS)\\b`,
+          "gi"
+        );
+
+        for (const match of trackerState.labourListText.matchAll(ppsPattern)) {
+          addExtractedRole(results, seen, match[1], "PPS", "LabourList", null, match.index);
+        }
+
+        return results;
       }
 
       async function getNewsRoleResignations() {
@@ -985,18 +1058,15 @@
           const text = normaliseText(await response.text());
           trackerState.roleNewsText = text;
 
-          const found = NEWS_ROLE_PATTERNS
-            .filter((item) => hasResignationContext(text, item.name))
-            .map((item) => ({
-              name: item.name,
-              title: item.title,
-              endedOn: null,
-              source: "PA via Irish Examiner",
-            }));
+          const found = extractRoleNewsDepartures(text);
 
-          const names = found.map((item) => item.name).join(", ");
+          const names = found
+            .slice()
+            .sort((a, b) => (a.sourceOrder || 0) - (b.sourceOrder || 0))
+            .map((item) => item.name)
+            .join(", ");
           elements.roleNewsText.textContent = names
-            ? `${found.length} PPS/aide departure${found.length === 1 ? "" : "s"} detected in PA copy: ${names}.`
+            ? `${found.length} PPS/aide departure${found.length === 1 ? "" : "s"} extracted from PA copy: ${names}.`
             : "No PPS/aide departures detected in the role-news source.";
           return found;
         } catch (error) {
@@ -1046,7 +1116,7 @@
           getGovRoleResignations(),
           getNewsRoleResignations(),
         ]);
-        renderRoleResignations([...govItems, ...newsItems]);
+        renderRoleResignations([...govItems, ...newsItems, ...getLabourListPpsDepartures()]);
       }
 
       function asArray(value) {
