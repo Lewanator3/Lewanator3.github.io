@@ -596,37 +596,37 @@
           <a class="market-card" data-market-card="may15" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-may-15-2026" rel="noopener" target="_blank">
             <div>
               <span class="market-date">May 15</span>
-              <strong class="market-price" data-market-price="may15">12.9%</strong>
+              <strong class="market-price" data-market-price="may15">...</strong>
             </div>
             <p class="market-question" data-market-question="may15">Starmer out by May 15, 2026?</p>
-            <span class="market-meta" data-market-meta="may15">Bid 0.128, ask 0.129, volume $2,967,389.</span>
+            <span class="market-meta" data-market-meta="may15">Loading Polymarket Gamma API.</span>
           </a>
 
           <a class="market-card" data-market-card="may31" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-may-31-2026" rel="noopener" target="_blank">
             <div>
               <span class="market-date">May 31</span>
-              <strong class="market-price" data-market-price="may31">31.5%</strong>
+              <strong class="market-price" data-market-price="may31">...</strong>
             </div>
             <p class="market-question" data-market-question="may31">Starmer out by May 31, 2026?</p>
-            <span class="market-meta" data-market-meta="may31">Bid 0.37, ask 0.38, volume $283,915.</span>
+            <span class="market-meta" data-market-meta="may31">Loading Polymarket Gamma API.</span>
           </a>
 
           <a class="market-card" data-market-card="jun30" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">
             <div>
               <span class="market-date">June 30</span>
-              <strong class="market-price" data-market-price="jun30">48.5%</strong>
+              <strong class="market-price" data-market-price="jun30">...</strong>
             </div>
             <p class="market-question" data-market-question="jun30">Starmer out by June 30, 2026?</p>
-            <span class="market-meta" data-market-meta="jun30">Bid 0.48, ask 0.49, volume $2,835,079.</span>
+            <span class="market-meta" data-market-meta="jun30">Loading Polymarket Gamma API.</span>
           </a>
 
           <a class="market-card" data-market-card="dec31" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-december-31-2026-936-416-977-234-134" rel="noopener" target="_blank">
             <div>
               <span class="market-date">December 31</span>
-              <strong class="market-price" data-market-price="dec31">76.5%</strong>
+              <strong class="market-price" data-market-price="dec31">...</strong>
             </div>
             <p class="market-question" data-market-question="dec31">Starmer out by December 31, 2026?</p>
-            <span class="market-meta" data-market-meta="dec31">Bid 0.76, ask 0.77, volume $1,864,840.</span>
+            <span class="market-meta" data-market-meta="dec31">Loading Polymarket Gamma API.</span>
           </a>
         </div>
 
@@ -637,15 +637,15 @@
               <strong class="role-count" id="roleCount">...</strong>
             </div>
             <ul class="role-list" id="roleList">
-              <li><span class="role-name">Checking sources</span><span class="role-title">GOV.UK and Sky News</span></li>
+              <li><span class="role-name">Checking sources</span><span class="role-title">GOV.UK, LabourList and ITV News</span></li>
             </ul>
             <span class="panel-meta" id="roleMeta">Loading role-resignation tracker.</span>
           </article>
 
           <div class="news-grid" aria-label="News pulse">
             <article class="news-card">
-              <span class="news-source">Sky News</span>
-              <p id="skyNewsText">Loading Sky News pressure tracker.</p>
+              <span class="news-source">ITV News</span>
+              <p id="itvNewsText">Loading ITV pressure tracker.</p>
             </article>
             <article class="news-card">
               <span class="news-source">LabourList</span>
@@ -669,6 +669,8 @@
         Labour MP count source:
         <a href="https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/" rel="noopener" target="_blank">LabourList tracker</a>,
         parsed live in the browser.
+        Role-resignation news source:
+        <a href="https://www.itv.com/news/2026-05-11/top-aides-quit-and-join-dozens-of-labour-mps-calling-for-starmer-to-resign" rel="noopener" target="_blank">ITV News</a>.
         Market source:
         <a href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">Polymarket</a>.
       </footer>
@@ -678,7 +680,8 @@
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
       const LABOURLIST_TRACKER_URL = "https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/";
-      const SKY_PRESSURE_URL = "https://news.sky.com/story/election-latest-victorious-keir-starmer-declares-now-is-time-to-deliver-as-cabinet-casualties-mount-on-dismal-night-for-tories-12593360";
+      const ITV_PRESSURE_URL = "https://www.itv.com/news/2026-05-11/top-aides-quit-and-join-dozens-of-labour-mps-calling-for-starmer-to-resign";
+      const ITV_PRESSURE_READER_URL = `https://r.jina.ai/http://r.jina.ai/http://${ITV_PRESSURE_URL}`;
       const POLYMARKET_EVENT_DIRECT_URL = "https://gamma-api.polymarket.com/events?slug=starmer-out-in-2025";
       const POLYMARKET_EVENT_PROXY_URLS = [
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`,
@@ -688,11 +691,23 @@
         "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/miatta-fahnbulleh",
       ];
-      const SKY_PPS_ROLE_PATTERNS = [
-        ["Tom Rutland", "PPS to Environment Secretary Emma Reynolds"],
-        ["Joe Morris", "PPS to Health Secretary Wes Streeting"],
-        ["Naushabah Khan", "Cabinet Office PPS"],
-        ["Melanie Ward", "PPS to David Lammy"],
+      const NEWS_ROLE_PATTERNS = [
+        {
+          name: "Melanie Ward",
+          title: "PPS to Justice Secretary and Deputy Prime Minister David Lammy",
+        },
+        {
+          name: "Joe Morris",
+          title: "PPS to Health Secretary Wes Streeting",
+        },
+        {
+          name: "Naushabah Khan",
+          title: "Cabinet Office PPS",
+        },
+        {
+          name: "Tom Rutland",
+          title: "PPS to Environment Secretary Emma Reynolds",
+        },
       ];
       const POLYMARKET_MARKETS = [
         {
@@ -726,6 +741,8 @@
       const trackerState = {
         labourMpCount: null,
         labourListLine: "",
+        labourListText: "",
+        itvText: "",
       };
 
       const elements = {
@@ -743,7 +760,7 @@
         roleCount: document.getElementById("roleCount"),
         roleList: document.getElementById("roleList"),
         roleMeta: document.getElementById("roleMeta"),
-        skyNewsText: document.getElementById("skyNewsText"),
+        itvNewsText: document.getElementById("itvNewsText"),
         labourListText: document.getElementById("labourListText"),
         govNewsText: document.getElementById("govNewsText"),
         marketNewsText: document.getElementById("marketNewsText"),
@@ -831,6 +848,7 @@
         try {
           const html = await fetchTextViaProxy(LABOURLIST_TRACKER_URL);
           const text = normaliseText(html);
+          trackerState.labourListText = text;
           const match = text.match(/As of\s+(.{6,80}?),\s+(\d+)\s+Labour MPs[^.]+\./i);
           if (!match) throw new Error("LabourList count not found");
 
@@ -887,24 +905,47 @@
         return people.flat();
       }
 
-      async function getSkyPpsResignations() {
+      function hasResignationContext(text, name) {
+        const index = text.indexOf(name);
+        if (index < 0) return false;
+
+        const start = Math.max(0, index - 450);
+        const context = text.slice(start, index + 900);
+        return /\b(resigned|resigning|resign|stepped down|quit)\b/i.test(context);
+      }
+
+      function firstMatchingSentence(text, patterns) {
+        const sentences = text.match(/[^.!?]+[.!?]/g) || [];
+        return sentences.find((sentence) =>
+          patterns.every((pattern) => pattern.test(sentence))
+        )?.trim() || "";
+      }
+
+      async function getItvRoleResignations() {
         try {
-          const html = await fetchTextViaProxy(SKY_PRESSURE_URL);
-          const text = normaliseText(html);
-          const found = SKY_PPS_ROLE_PATTERNS
-            .filter(([name]) => text.includes(name))
-            .map(([name, title]) => ({
-              name,
-              title,
+          const response = await fetchWithTimeout(ITV_PRESSURE_READER_URL, 12000);
+          if (!response.ok) throw new Error(`ITV reader returned ${response.status}`);
+
+          const text = normaliseText(await response.text());
+          trackerState.itvText = text;
+
+          const found = NEWS_ROLE_PATTERNS
+            .filter((item) => hasResignationContext(text, item.name))
+            .map((item) => ({
+              name: item.name,
+              title: item.title,
               endedOn: null,
-              source: "Sky News",
+              source: "ITV News",
             }));
 
-          const sentence = text.match(/Four junior members of the government have resigned[^.]+\./i);
-          if (sentence) elements.skyNewsText.textContent = sentence[0];
+          const sentence = firstMatchingSentence(text, [
+            /four government aides/i,
+            /resigned/i,
+          ]);
+          elements.itvNewsText.textContent = sentence || `${found.length} PPS resignation${found.length === 1 ? "" : "s"} refreshed from ITV News.`;
           return found;
         } catch (error) {
-          elements.skyNewsText.textContent = "Could not refresh Sky News from this browser.";
+          elements.itvNewsText.textContent = "Could not refresh ITV News from this browser.";
           console.error(error);
           return [];
         }
@@ -943,11 +984,11 @@
       }
 
       async function updateRoleResignations() {
-        const [govItems, skyItems] = await Promise.all([
+        const [govItems, itvItems] = await Promise.all([
           getGovRoleResignations(),
-          getSkyPpsResignations(),
+          getItvRoleResignations(),
         ]);
-        renderRoleResignations([...govItems, ...skyItems]);
+        renderRoleResignations([...govItems, ...itvItems]);
       }
 
       function asArray(value) {
@@ -1158,14 +1199,20 @@
         }
       }
 
-      elements.refresh.addEventListener("click", checkStatus);
-      updateLabourListTracker();
-      updateRoleResignations();
-      checkStatus();
+      async function updatePressureTrackers() {
+        await updateLabourListTracker();
+        await updateRoleResignations();
+      }
+
+      async function refreshStatusAndPressure() {
+        await updatePressureTrackers();
+        await checkStatus();
+      }
+
+      elements.refresh.addEventListener("click", refreshStatusAndPressure);
+      refreshStatusAndPressure();
       updatePolymarket();
-      window.setInterval(updateLabourListTracker, FIVE_MINUTES);
-      window.setInterval(updateRoleResignations, FIVE_MINUTES);
-      window.setInterval(checkStatus, FIVE_MINUTES);
+      window.setInterval(refreshStatusAndPressure, FIVE_MINUTES);
       window.setInterval(updatePolymarket, FIVE_MINUTES);
     </script>
   </body>
