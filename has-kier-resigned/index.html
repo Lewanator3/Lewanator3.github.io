@@ -520,7 +520,7 @@
 
           <div class="metrics">
             <div class="metric">
-              <strong id="mpCount">85</strong>
+              <strong id="mpCount">...</strong>
               <span>Labour MPs calling for resignation or a timetable</span>
             </div>
             <div class="metric">
@@ -573,7 +573,7 @@
             </div>
             <div class="fact">
               <span class="label">MP count</span>
-              <span class="value" id="countSource">LabourList, checked 12 May 2026 11:20 UTC</span>
+              <span class="value" id="countSource">Checking LabourList</span>
             </div>
             <div class="fact">
               <span class="label">Last check</span>
@@ -634,35 +634,30 @@
           <article class="info-panel">
             <div class="panel-title-row">
               <h2>Government roles quit</h2>
-              <strong class="role-count">6</strong>
+              <strong class="role-count" id="roleCount">...</strong>
             </div>
-            <ul class="role-list">
-              <li><span class="role-name">Jess Phillips</span><span class="role-title">Safeguarding and Violence Against Women and Girls Minister.</span></li>
-              <li><span class="role-name">Miatta Fahnbulleh</span><span class="role-title">Faith and Communities Minister.</span></li>
-              <li><span class="role-name">Melanie Ward</span><span class="role-title">PPS to David Lammy.</span></li>
-              <li><span class="role-name">Joe Morris</span><span class="role-title">PPS to Health Secretary Wes Streeting.</span></li>
-              <li><span class="role-name">Naushabah Khan</span><span class="role-title">Cabinet Office PPS.</span></li>
-              <li><span class="role-name">Tom Rutland</span><span class="role-title">PPS to Environment Secretary Emma Reynolds.</span></li>
+            <ul class="role-list" id="roleList">
+              <li><span class="role-name">Checking sources</span><span class="role-title">GOV.UK and Sky News</span></li>
             </ul>
-            <span class="panel-meta">Sources: GOV.UK, Sky News/Beth Rigby, ITV News and AP, checked 12 May 2026 13:26 BST. GOV.UK now shows Phillips's ministerial role ended on 12 May 2026.</span>
+            <span class="panel-meta" id="roleMeta">Loading role-resignation tracker.</span>
           </article>
 
           <div class="news-grid" aria-label="News pulse">
             <article class="news-card">
               <span class="news-source">Sky News</span>
-              <p>Reports safeguarding minister Jess Phillips resigned from government; Sky's tally earlier had 80 Labour MPs calling for Starmer to resign.</p>
+              <p id="skyNewsText">Loading Sky News pressure tracker.</p>
             </article>
             <article class="news-card">
               <span class="news-source">LabourList</span>
-              <p>Reports 85 Labour MPs calling for resignation or a timetable as of 11.20am on Tuesday 12 May.</p>
+              <p id="labourListText">Loading LabourList resignation tracker.</p>
             </article>
             <article class="news-card">
-              <span class="news-source">ITV News</span>
-              <p>Reports four government aides resigned and names the PPS roles they left.</p>
+              <span class="news-source">GOV.UK</span>
+              <p id="govNewsText">Checking ministerial role records.</p>
             </article>
             <article class="news-card">
-              <span class="news-source">AP</span>
-              <p>Reports Starmer told Cabinet he has no intention of resigning.</p>
+              <span class="news-source">Polymarket</span>
+              <p id="marketNewsText">Loading market snapshots.</p>
             </article>
           </div>
         </div>
@@ -673,7 +668,7 @@
         <a href="https://www.gov.uk/api/content/government/ministers/prime-minister" rel="noopener" target="_blank">GOV.UK Content API</a>.
         Labour MP count source:
         <a href="https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/" rel="noopener" target="_blank">LabourList tracker</a>,
-        which reported 85 Labour MPs as of 11.20am on Tuesday 12 May 2026.
+        parsed live in the browser.
         Market source:
         <a href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">Polymarket</a>.
       </footer>
@@ -682,10 +677,22 @@
     <script>
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
+      const LABOURLIST_TRACKER_URL = "https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/";
+      const SKY_PRESSURE_URL = "https://news.sky.com/story/election-latest-victorious-keir-starmer-declares-now-is-time-to-deliver-as-cabinet-casualties-mount-on-dismal-night-for-tories-12593360";
       const POLYMARKET_EVENT_DIRECT_URL = "https://gamma-api.polymarket.com/events?slug=starmer-out-in-2025";
       const POLYMARKET_EVENT_PROXY_URLS = [
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`,
         `https://api.allorigins.win/raw?url=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`,
+      ];
+      const ROLE_SOURCE_PEOPLE = [
+        "https://www.gov.uk/api/content/government/people/jess-phillips",
+        "https://www.gov.uk/api/content/government/people/miatta-fahnbulleh",
+      ];
+      const SKY_PPS_ROLE_PATTERNS = [
+        ["Tom Rutland", "PPS to Environment Secretary Emma Reynolds"],
+        ["Joe Morris", "PPS to Health Secretary Wes Streeting"],
+        ["Naushabah Khan", "Cabinet Office PPS"],
+        ["Melanie Ward", "PPS to David Lammy"],
       ];
       const POLYMARKET_MARKETS = [
         {
@@ -713,10 +720,13 @@
         "\"Keir Starmer\" \"step down\"",
         "\"Keir Starmer\" \"resignation\"",
       ];
-      const LABOUR_MP_CALL_COUNT = 85;
-      const LABOUR_MP_COUNT_AS_OF = "12 May 2026 11:20 UTC";
       const STARTED_AS_PM = new Date("2024-07-05T00:00:00+01:00");
       const FIVE_MINUTES = 5 * 60 * 1000;
+      const TRACKER_START_DATE = new Date("2026-05-12T00:00:00+01:00");
+      const trackerState = {
+        labourMpCount: null,
+        labourListLine: "",
+      };
 
       const elements = {
         answer: document.getElementById("answer"),
@@ -730,6 +740,13 @@
         pmStatus: document.getElementById("pmStatus"),
         countSource: document.getElementById("countSource"),
         lastChecked: document.getElementById("lastChecked"),
+        roleCount: document.getElementById("roleCount"),
+        roleList: document.getElementById("roleList"),
+        roleMeta: document.getElementById("roleMeta"),
+        skyNewsText: document.getElementById("skyNewsText"),
+        labourListText: document.getElementById("labourListText"),
+        govNewsText: document.getElementById("govNewsText"),
+        marketNewsText: document.getElementById("marketNewsText"),
       };
 
       function formatDate(value) {
@@ -807,9 +824,130 @@
       }
 
       function updateStaticMetrics() {
-        elements.mpCount.textContent = LABOUR_MP_CALL_COUNT.toLocaleString("en-GB");
         elements.daysInOffice.textContent = getDaysInOffice().toLocaleString("en-GB");
-        elements.countSource.textContent = `LabourList, checked ${LABOUR_MP_COUNT_AS_OF}`;
+      }
+
+      async function updateLabourListTracker() {
+        try {
+          const html = await fetchTextViaProxy(LABOURLIST_TRACKER_URL);
+          const text = normaliseText(html);
+          const match = text.match(/As of\s+(.{6,80}?),\s+(\d+)\s+Labour MPs[^.]+\./i);
+          if (!match) throw new Error("LabourList count not found");
+
+          const count = Number(match[2]);
+          trackerState.labourMpCount = count;
+          trackerState.labourListLine = match[0];
+          elements.mpCount.textContent = count.toLocaleString("en-GB");
+          elements.countSource.textContent = `LabourList: ${match[1].trim()}`;
+          elements.labourListText.textContent = match[0];
+        } catch (error) {
+          elements.mpCount.textContent = trackerState.labourMpCount
+            ? trackerState.labourMpCount.toLocaleString("en-GB")
+            : "!";
+          elements.countSource.textContent = "LabourList check failed";
+          elements.labourListText.textContent = "Could not refresh LabourList from this browser.";
+          console.error(error);
+        }
+      }
+
+      function roleFromAppointment(personTitle, appointment) {
+        const role = appointment?.links?.role?.[0];
+        const roleTitle = typeof role === "string"
+          ? appointment.title.replace(`${personTitle} - `, "")
+          : role?.title || appointment.title.replace(`${personTitle} - `, "");
+        return {
+          name: personTitle.replace(/^The Rt Hon\s+/i, "").replace(/\s+MP$/i, ""),
+          title: roleTitle,
+          endedOn: appointment?.details?.ended_on,
+          source: "GOV.UK",
+        };
+      }
+
+      async function getGovRoleResignations() {
+        const people = await Promise.all(
+          ROLE_SOURCE_PEOPLE.map(async (url) => {
+            const response = await fetchWithTimeout(url, 8000);
+            if (!response.ok) return [];
+
+            const person = await response.json();
+            const appointments = Array.isArray(person?.links?.role_appointments)
+              ? person.links.role_appointments
+              : [person?.links?.role_appointments].filter(Boolean);
+
+            return appointments
+              .filter((appointment) => appointment?.details?.current === false)
+              .filter((appointment) => {
+                const endedOn = appointment?.details?.ended_on;
+                return endedOn && new Date(endedOn) >= TRACKER_START_DATE;
+              })
+              .map((appointment) => roleFromAppointment(person.title, appointment));
+          })
+        );
+
+        return people.flat();
+      }
+
+      async function getSkyPpsResignations() {
+        try {
+          const html = await fetchTextViaProxy(SKY_PRESSURE_URL);
+          const text = normaliseText(html);
+          const found = SKY_PPS_ROLE_PATTERNS
+            .filter(([name]) => text.includes(name))
+            .map(([name, title]) => ({
+              name,
+              title,
+              endedOn: null,
+              source: "Sky News",
+            }));
+
+          const sentence = text.match(/Four junior members of the government have resigned[^.]+\./i);
+          if (sentence) elements.skyNewsText.textContent = sentence[0];
+          return found;
+        } catch (error) {
+          elements.skyNewsText.textContent = "Could not refresh Sky News from this browser.";
+          console.error(error);
+          return [];
+        }
+      }
+
+      function renderRoleResignations(items) {
+        const unique = [];
+        const seen = new Set();
+
+        items.forEach((item) => {
+          const key = item.name.toLowerCase();
+          if (seen.has(key)) return;
+          seen.add(key);
+          unique.push(item);
+        });
+
+        elements.roleCount.textContent = unique.length.toLocaleString("en-GB");
+        elements.roleList.replaceChildren(
+          ...unique.map((item) => {
+            const li = document.createElement("li");
+            const name = document.createElement("span");
+            const title = document.createElement("span");
+            name.className = "role-name";
+            title.className = "role-title";
+            name.textContent = item.name;
+            title.textContent = item.endedOn
+              ? `${item.title}. Ended ${formatRoleDate(item.endedOn)}.`
+              : `${item.title}.`;
+            li.append(name, title);
+            return li;
+          })
+        );
+        elements.roleMeta.textContent = `Sources: ${[...new Set(unique.map((item) => item.source))].join(", ")}. Refreshed ${formatDateTime(new Date())}.`;
+        const govConfirmed = unique.filter((item) => item.source === "GOV.UK").length;
+        elements.govNewsText.textContent = `${govConfirmed} role resignation${govConfirmed === 1 ? "" : "s"} confirmed by GOV.UK role appointments.`;
+      }
+
+      async function updateRoleResignations() {
+        const [govItems, skyItems] = await Promise.all([
+          getGovRoleResignations(),
+          getSkyPpsResignations(),
+        ]);
+        renderRoleResignations([...govItems, ...skyItems]);
       }
 
       function asArray(value) {
@@ -836,6 +974,35 @@
         } finally {
           window.clearTimeout(timeoutId);
         }
+      }
+
+      function proxyUrlsFor(url) {
+        return [
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+          `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+        ];
+      }
+
+      async function fetchTextViaProxy(url) {
+        for (const candidate of proxyUrlsFor(url)) {
+          try {
+            const response = await fetchWithTimeout(candidate, 12000);
+            if (response.ok) return await response.text();
+          } catch {
+            // Try the next public proxy.
+          }
+        }
+        throw new Error(`Could not fetch ${url}`);
+      }
+
+      function normaliseText(value) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(value, "text/html");
+        return (doc.body.textContent || value).replace(/\s+/g, " ").trim();
+      }
+
+      function formatRoleDate(value) {
+        return formatDate(value || new Date());
       }
 
       async function fetchPolymarketEvent() {
@@ -908,7 +1075,10 @@
               marketElements.meta.textContent = `Bid ${market.bestBid || "n/a"}, ask ${market.bestAsk || "n/a"}, volume ${formatMoney(market.volume)}.`;
             }
           });
+          const openMarkets = markets.filter((market) => POLYMARKET_MARKETS.some((config) => config.slug === market?.slug));
+          elements.marketNewsText.textContent = `${openMarkets.length} Polymarket date markets refreshed from Gamma API.`;
         } catch (error) {
+          elements.marketNewsText.textContent = "Polymarket browser refresh failed; keeping the last displayed market snapshots.";
           console.error(error);
         }
       }
@@ -953,11 +1123,14 @@
 
           if (isCurrent && isStarmer && !endedOn) {
             elements.pmStatus.textContent = "Still listed as current Prime Minister";
+            const mpPressureText = trackerState.labourMpCount
+              ? `${trackerState.labourMpCount.toLocaleString("en-GB")} Labour MPs`
+              : "Labour MPs";
             setAnswer(
               "active",
               "No",
               "No official resignation/departure detected",
-              `GOV.UK still lists ${name} as the current Prime Minister. The separate LabourList tracker says ${LABOUR_MP_CALL_COUNT} Labour MPs are calling for him to resign or set a departure timetable.`
+              `GOV.UK still lists ${name} as the current Prime Minister. The separate LabourList tracker is checked live for how many Labour MPs are calling for him to resign or set a departure timetable; currently ${mpPressureText} are shown when the tracker is reachable.`
             );
             return;
           }
@@ -986,8 +1159,12 @@
       }
 
       elements.refresh.addEventListener("click", checkStatus);
+      updateLabourListTracker();
+      updateRoleResignations();
       checkStatus();
       updatePolymarket();
+      window.setInterval(updateLabourListTracker, FIVE_MINUTES);
+      window.setInterval(updateRoleResignations, FIVE_MINUTES);
       window.setInterval(checkStatus, FIVE_MINUTES);
       window.setInterval(updatePolymarket, FIVE_MINUTES);
     </script>
