@@ -688,26 +688,26 @@
         `https://api.allorigins.win/raw?url=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`,
       ];
       const ROLE_SOURCE_PEOPLE = [
-        "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/miatta-fahnbulleh",
+        "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/alex-davies-jones",
       ];
       const NEWS_ROLE_PATTERNS = [
         {
-          name: "Melanie Ward",
-          title: "PPS to Justice Secretary and Deputy Prime Minister David Lammy",
-        },
-        {
           name: "Joe Morris",
           title: "PPS to Health Secretary Wes Streeting",
+        },
+        {
+          name: "Tom Rutland",
+          title: "PPS to Environment Secretary Emma Reynolds",
         },
         {
           name: "Naushabah Khan",
           title: "Cabinet Office PPS",
         },
         {
-          name: "Tom Rutland",
-          title: "PPS to Environment Secretary Emma Reynolds",
+          name: "Melanie Ward",
+          title: "PPS to Justice Secretary and Deputy Prime Minister David Lammy",
         },
         {
           name: "Gordon McKee",
@@ -718,6 +718,17 @@
           title: "PPS to Home Secretary Shabana Mahmood",
         },
       ];
+      const ROLE_ORDER_HINTS = {
+        "joe-morris": { date: "2026-05-11", sequence: 1 },
+        "tom-rutland": { date: "2026-05-11", sequence: 2 },
+        "naushabah-khan": { date: "2026-05-11", sequence: 3 },
+        "melanie-ward": { date: "2026-05-11", sequence: 4 },
+        "gordon-mckee": { date: "2026-05-11", sequence: 5 },
+        "sally-jameson": { date: "2026-05-11", sequence: 6 },
+        "miatta-fahnbulleh": { date: "2026-05-12", sequence: 1 },
+        "jess-phillips": { date: "2026-05-12", sequence: 2 },
+        "alex-davies-jones": { date: "2026-05-12", sequence: 3 },
+      };
       const POLYMARKET_MARKETS = [
         {
           key: "may15",
@@ -912,6 +923,15 @@
         };
       }
 
+      function getRoleSortValue(item) {
+        const hint = ROLE_ORDER_HINTS[slugifyPersonName(item.name)];
+        if (hint) {
+          return Date.parse(`${hint.date}T00:00:00+01:00`) + hint.sequence;
+        }
+        if (item.endedOn) return new Date(item.endedOn).getTime();
+        return 0;
+      }
+
       async function getGovRoleResignations() {
         const peopleUrls = [...new Set([
           ...ROLE_SOURCE_PEOPLE,
@@ -996,6 +1016,9 @@
           seen.add(key);
           unique.push(item);
         });
+        unique.sort((a, b) =>
+          getRoleSortValue(b) - getRoleSortValue(a) || a.name.localeCompare(b.name)
+        );
 
         elements.roleCount.textContent = unique.length.toLocaleString("en-GB");
         elements.roleList.replaceChildren(
@@ -1013,7 +1036,7 @@
             return li;
           })
         );
-        elements.roleMeta.textContent = `Sources: ${[...new Set(unique.map((item) => item.source))].join(", ")}. Refreshed ${formatDateTime(new Date())}.`;
+        elements.roleMeta.textContent = `Sources: ${[...new Set(unique.map((item) => item.source))].join(", ")}. Ordered newest first. Refreshed ${formatDateTime(new Date())}.`;
         const govConfirmed = unique.filter((item) => item.source === "GOV.UK").length;
         elements.govNewsText.textContent = `${govConfirmed} role resignation${govConfirmed === 1 ? "" : "s"} confirmed by GOV.UK role appointments.`;
       }
