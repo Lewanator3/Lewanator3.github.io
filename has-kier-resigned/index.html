@@ -155,72 +155,185 @@
         align-items: center;
       }
 
-      .intel-grid {
+      .pressure-section {
         display: grid;
-        grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
         gap: 18px;
-        margin-top: 28px;
+        margin-top: clamp(38px, 6vw, 70px);
+        border-top: 1px solid var(--line);
+        padding-top: 24px;
       }
 
-      .panel {
+      .pressure-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .pressure-head h2 {
+        margin: 4px 0 0;
+        font-size: clamp(1.55rem, 4vw, 2.4rem);
+        line-height: 1.05;
+      }
+
+      .source-stamp {
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 740;
+        line-height: 1.35;
+        text-align: right;
+      }
+
+      .market-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .market-card,
+      .info-panel,
+      .news-card {
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--surface);
+      }
+
+      .market-card {
+        display: grid;
+        min-height: 184px;
+        align-content: space-between;
+        gap: 13px;
+        border-top: 4px solid var(--blue);
+        color: inherit;
+        padding: 16px;
+        text-decoration: none;
+      }
+
+      .market-card:hover {
+        border-color: #aeb8c5;
+      }
+
+      .market-card:nth-child(4) {
+        border-top-color: var(--amber);
+      }
+
+      .market-date {
+        color: var(--blue-dark);
+        font-size: 0.78rem;
+        font-weight: 860;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .market-price {
+        display: block;
+        margin-top: 4px;
+        color: var(--ink);
+        font-size: clamp(2.35rem, 6vw, 4.1rem);
+        font-weight: 900;
+        line-height: 0.92;
+      }
+
+      .market-question {
+        margin: 0;
+        color: #243244;
+        font-size: 0.96rem;
+        font-weight: 760;
+        line-height: 1.35;
+      }
+
+      .market-meta,
+      .panel-meta {
+        display: block;
+        color: var(--muted);
+        font-size: 0.86rem;
+        font-weight: 720;
+        line-height: 1.35;
+      }
+
+      .pressure-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 16px;
+      }
+
+      .info-panel {
         padding: 18px;
       }
 
-      .panel h2 {
-        margin: 0 0 12px;
-        font-size: 1.05rem;
-        line-height: 1.25;
+      .panel-title-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 14px;
       }
 
-      .panel-number {
-        display: block;
-        margin-bottom: 8px;
-        font-size: clamp(2.6rem, 8vw, 4.5rem);
-        font-weight: 900;
-        line-height: 0.95;
-      }
-
-      .panel-copy {
+      .panel-title-row h2 {
         margin: 0;
-        color: #303844;
-        line-height: 1.5;
+        font-size: 1.1rem;
+        line-height: 1.2;
       }
 
-      .role-list,
-      .news-list {
+      .role-count {
+        color: var(--ink);
+        font-size: clamp(2.2rem, 6vw, 3.6rem);
+        font-weight: 900;
+        line-height: 0.9;
+      }
+
+      .role-list {
         display: grid;
-        gap: 10px;
-        margin: 14px 0 0;
+        gap: 0;
+        margin: 0;
         padding: 0;
         list-style: none;
       }
 
-      .role-list li,
-      .news-list li {
+      .role-list li {
+        display: grid;
+        grid-template-columns: minmax(126px, 0.36fr) minmax(0, 1fr);
+        gap: 14px;
         border-top: 1px solid var(--line);
-        padding-top: 10px;
+        padding: 12px 0;
+        color: #303844;
+        line-height: 1.38;
+      }
+
+      .role-name {
+        color: var(--ink);
+        font-weight: 860;
+      }
+
+      .role-title {
+        color: #303844;
+      }
+
+      .news-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .news-card {
+        display: grid;
+        gap: 8px;
+        min-height: 118px;
+        padding: 15px;
+      }
+
+      .news-source {
+        color: var(--blue-dark);
+        font-size: 0.78rem;
+        font-weight: 860;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .news-card p {
+        margin: 0;
         color: #303844;
         line-height: 1.42;
-      }
-
-      .role-list strong,
-      .news-list strong {
-        color: var(--ink);
-      }
-
-      .panel-meta {
-        display: block;
-        margin-top: 8px;
-        color: var(--muted);
-        font-size: 0.88rem;
-        font-weight: 720;
-      }
-
-      .wide-panel {
-        grid-column: 1 / -1;
       }
 
       button,
@@ -364,8 +477,27 @@
           max-width: 420px;
         }
 
-        .intel-grid {
+        .pressure-head,
+        .pressure-grid {
           grid-template-columns: 1fr;
+        }
+
+        .pressure-head {
+          display: grid;
+        }
+
+        .source-stamp {
+          text-align: left;
+        }
+
+        .market-grid,
+        .news-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .role-list li {
+          grid-template-columns: 1fr;
+          gap: 4px;
         }
       }
     </style>
@@ -451,42 +583,88 @@
         </aside>
       </section>
 
-      <section class="intel-grid" aria-label="Pressure tracker">
-        <article class="panel">
-          <h2>Government roles quit</h2>
-          <strong class="panel-number">5</strong>
-          <p class="panel-copy">
-            Labour MPs who have resigned government or PPS roles while joining
-            calls for Starmer to quit or set a departure timetable.
-          </p>
-          <ul class="role-list">
-            <li><strong>Miatta Fahnbulleh</strong> - Faith and Communities Minister.</li>
-            <li><strong>Melanie Ward</strong> - PPS to David Lammy.</li>
-            <li><strong>Joe Morris</strong> - PPS to Health Secretary Wes Streeting.</li>
-            <li><strong>Naushabah Khan</strong> - Cabinet Office PPS.</li>
-            <li><strong>Tom Rutland</strong> - PPS to Environment Secretary Emma Reynolds.</li>
-          </ul>
-          <span class="panel-meta">Sources: ITV News, Sky News and AP, checked 12 May 2026.</span>
-        </article>
+      <section class="pressure-section" aria-label="Pressure tracker">
+        <div class="pressure-head">
+          <div>
+            <p class="eyebrow">Pressure tracker</p>
+            <h2>Calls, roles and markets</h2>
+          </div>
+          <div class="source-stamp">Polymarket snapshots refresh every five minutes<br />without clearing if the API is slow.</div>
+        </div>
 
-        <article class="panel">
-          <h2>Polymarket odds</h2>
-          <strong class="panel-number" id="polyOdds">40.5%</strong>
-          <p class="panel-copy" id="polyQuestion">
-            Starmer out by June 30, 2026?
-          </p>
-          <span class="panel-meta" id="polyMeta">Yes price snapshot: bid 0.40, ask 0.41, volume $2,826,743. Refreshes via Gamma API.</span>
-        </article>
+        <div class="market-grid" aria-label="Polymarket odds by date">
+          <a class="market-card" data-market-card="may15" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-may-15-2026" rel="noopener" target="_blank">
+            <div>
+              <span class="market-date">May 15</span>
+              <strong class="market-price" data-market-price="may15">11.2%</strong>
+            </div>
+            <p class="market-question" data-market-question="may15">Starmer out by May 15, 2026?</p>
+            <span class="market-meta" data-market-meta="may15">Bid 0.11, ask 0.114, volume $2,938,569.</span>
+          </a>
 
-        <article class="panel wide-panel">
-          <h2>News pulse</h2>
-          <ul class="news-list">
-            <li><strong>Sky News:</strong> reports 80 Labour MPs calling for Starmer to resign and says Starmer told Cabinet he would not resign.</li>
-            <li><strong>LabourList:</strong> reports 85 Labour MPs calling for resignation or a timetable as of 11.20am on Tuesday 12 May.</li>
-            <li><strong>ITV News:</strong> reports four government aides resigned and names the PPS roles they left.</li>
-            <li><strong>AP:</strong> reports Starmer told Cabinet he has no intention of resigning.</li>
-          </ul>
-        </article>
+          <a class="market-card" data-market-card="may31" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-may-31-2026" rel="noopener" target="_blank">
+            <div>
+              <span class="market-date">May 31</span>
+              <strong class="market-price" data-market-price="may31">31.5%</strong>
+            </div>
+            <p class="market-question" data-market-question="may31">Starmer out by May 31, 2026?</p>
+            <span class="market-meta" data-market-meta="may31">Bid 0.31, ask 0.32, volume $276,036.</span>
+          </a>
+
+          <a class="market-card" data-market-card="jun30" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">
+            <div>
+              <span class="market-date">June 30</span>
+              <strong class="market-price" data-market-price="jun30">40.5%</strong>
+            </div>
+            <p class="market-question" data-market-question="jun30">Starmer out by June 30, 2026?</p>
+            <span class="market-meta" data-market-meta="jun30">Bid 0.40, ask 0.41, volume $2,826,909.</span>
+          </a>
+
+          <a class="market-card" data-market-card="dec31" href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-december-31-2026-936-416-977-234-134" rel="noopener" target="_blank">
+            <div>
+              <span class="market-date">December 31</span>
+              <strong class="market-price" data-market-price="dec31">74.5%</strong>
+            </div>
+            <p class="market-question" data-market-question="dec31">Starmer out by December 31, 2026?</p>
+            <span class="market-meta" data-market-meta="dec31">Bid 0.74, ask 0.75, volume $1,848,983.</span>
+          </a>
+        </div>
+
+        <div class="pressure-grid">
+          <article class="info-panel">
+            <div class="panel-title-row">
+              <h2>Government roles quit</h2>
+              <strong class="role-count">5</strong>
+            </div>
+            <ul class="role-list">
+              <li><span class="role-name">Miatta Fahnbulleh</span><span class="role-title">Faith and Communities Minister.</span></li>
+              <li><span class="role-name">Melanie Ward</span><span class="role-title">PPS to David Lammy.</span></li>
+              <li><span class="role-name">Joe Morris</span><span class="role-title">PPS to Health Secretary Wes Streeting.</span></li>
+              <li><span class="role-name">Naushabah Khan</span><span class="role-title">Cabinet Office PPS.</span></li>
+              <li><span class="role-name">Tom Rutland</span><span class="role-title">PPS to Environment Secretary Emma Reynolds.</span></li>
+            </ul>
+            <span class="panel-meta">Sources: ITV News, Sky News and AP, checked 12 May 2026.</span>
+          </article>
+
+          <div class="news-grid" aria-label="News pulse">
+            <article class="news-card">
+              <span class="news-source">Sky News</span>
+              <p>Reports 80 Labour MPs calling for Starmer to resign and says Starmer told Cabinet he would not resign.</p>
+            </article>
+            <article class="news-card">
+              <span class="news-source">LabourList</span>
+              <p>Reports 85 Labour MPs calling for resignation or a timetable as of 11.20am on Tuesday 12 May.</p>
+            </article>
+            <article class="news-card">
+              <span class="news-source">ITV News</span>
+              <p>Reports four government aides resigned and names the PPS roles they left.</p>
+            </article>
+            <article class="news-card">
+              <span class="news-source">AP</span>
+              <p>Reports Starmer told Cabinet he has no intention of resigning.</p>
+            </article>
+          </div>
+        </div>
       </section>
 
       <footer>
@@ -503,8 +681,30 @@
     <script>
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
-      const POLYMARKET_DIRECT_URL = "https://gamma-api.polymarket.com/markets?slug=starmer-out-by-june-30-2026-862-594-548";
-      const POLYMARKET_PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(POLYMARKET_DIRECT_URL)}`;
+      const POLYMARKET_EVENT_DIRECT_URL = "https://gamma-api.polymarket.com/events?slug=starmer-out-in-2025";
+      const POLYMARKET_EVENT_PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`;
+      const POLYMARKET_MARKETS = [
+        {
+          key: "may15",
+          slug: "starmer-out-by-may-15-2026",
+          snapshotMeta: "Bid 0.11, ask 0.114, volume $2,938,569.",
+        },
+        {
+          key: "may31",
+          slug: "starmer-out-by-may-31-2026",
+          snapshotMeta: "Bid 0.31, ask 0.32, volume $276,036.",
+        },
+        {
+          key: "jun30",
+          slug: "starmer-out-by-june-30-2026-862-594-548",
+          snapshotMeta: "Bid 0.40, ask 0.41, volume $2,826,909.",
+        },
+        {
+          key: "dec31",
+          slug: "starmer-out-by-december-31-2026-936-416-977-234-134",
+          snapshotMeta: "Bid 0.74, ask 0.75, volume $1,848,983.",
+        },
+      ];
       const ANNOUNCEMENT_SEARCH_PHRASES = [
         "\"Keir Starmer\" \"will resign\"",
         "\"Keir Starmer\" \"is resigning\"",
@@ -530,9 +730,6 @@
         pmStatus: document.getElementById("pmStatus"),
         countSource: document.getElementById("countSource"),
         lastChecked: document.getElementById("lastChecked"),
-        polyOdds: document.getElementById("polyOdds"),
-        polyQuestion: document.getElementById("polyQuestion"),
-        polyMeta: document.getElementById("polyMeta"),
       };
 
       function formatDate(value) {
@@ -641,38 +838,76 @@
         }
       }
 
+      async function fetchPolymarketEvent() {
+        let response;
+
+        try {
+          response = await fetchWithTimeout(POLYMARKET_EVENT_DIRECT_URL, 3000);
+        } catch {
+          response = await fetchWithTimeout(POLYMARKET_EVENT_PROXY_URL, 12000);
+        }
+
+        if (!response.ok) {
+          response = await fetchWithTimeout(POLYMARKET_EVENT_PROXY_URL, 12000);
+        }
+
+        if (!response.ok) throw new Error(`Polymarket returned ${response.status}`);
+
+        const payload = await response.json();
+        return Array.isArray(payload) ? payload[0] : payload?.events?.[0];
+      }
+
+      function getMarketElements(key) {
+        return {
+          price: document.querySelector(`[data-market-price="${key}"]`),
+          question: document.querySelector(`[data-market-question="${key}"]`),
+          meta: document.querySelector(`[data-market-meta="${key}"]`),
+        };
+      }
+
+      function getYesPrice(market) {
+        const outcomes = asArray(market?.outcomes);
+        const prices = asArray(market?.outcomePrices).map(Number);
+        const yesIndex = outcomes.findIndex((outcome) => /^yes$/i.test(outcome));
+        return prices[yesIndex];
+      }
+
+      function formatMoney(value) {
+        return `$${Number(value || 0).toLocaleString("en-GB", {
+          maximumFractionDigits: 0,
+        })}`;
+      }
+
       async function updatePolymarket() {
         try {
-          let response;
+          const event = await fetchPolymarketEvent();
+          const markets = event?.markets || [];
 
-          try {
-            response = await fetchWithTimeout(POLYMARKET_DIRECT_URL, 3000);
-          } catch {
-            response = await fetchWithTimeout(POLYMARKET_PROXY_URL, 12000);
-          }
+          POLYMARKET_MARKETS.forEach((config) => {
+            const market = markets.find((candidate) => candidate?.slug === config.slug);
+            if (!market) return;
 
-          if (!response.ok) {
-            response = await fetchWithTimeout(POLYMARKET_PROXY_URL, 12000);
-          }
+            const yesPrice = getYesPrice(market);
+            if (!Number.isFinite(yesPrice)) return;
 
-          if (!response.ok) throw new Error(`Polymarket returned ${response.status}`);
-
-          const markets = await response.json();
-          const market = markets[0];
-          const outcomes = asArray(market?.outcomes);
-          const prices = asArray(market?.outcomePrices).map(Number);
-          const yesIndex = outcomes.findIndex((outcome) => /^yes$/i.test(outcome));
-          const yesPrice = prices[yesIndex];
-
-          if (!Number.isFinite(yesPrice)) throw new Error("No yes price");
-
-          elements.polyOdds.textContent = `${(yesPrice * 100).toFixed(1)}%`;
-          elements.polyQuestion.textContent = market.question || "Starmer out by June 30, 2026?";
-          elements.polyMeta.textContent = `Yes price. Bid ${market.bestBid || "n/a"}, ask ${market.bestAsk || "n/a"}, volume $${Number(market.volume || 0).toLocaleString("en-GB", { maximumFractionDigits: 0 })}.`;
+            const marketElements = getMarketElements(config.key);
+            if (marketElements.price) {
+              marketElements.price.textContent = `${(yesPrice * 100).toFixed(1)}%`;
+            }
+            if (marketElements.question) {
+              marketElements.question.textContent = market.question || marketElements.question.textContent;
+            }
+            if (marketElements.meta) {
+              marketElements.meta.textContent = `Bid ${market.bestBid || "n/a"}, ask ${market.bestAsk || "n/a"}, volume ${formatMoney(market.volume)}.`;
+            }
+          });
         } catch (error) {
-          elements.polyOdds.textContent = "?";
-          elements.polyQuestion.textContent = "Polymarket data could not be loaded.";
-          elements.polyMeta.textContent = "Gamma API unavailable from this browser.";
+          POLYMARKET_MARKETS.forEach((config) => {
+            const { meta } = getMarketElements(config.key);
+            if (meta) {
+              meta.textContent = `${config.snapshotMeta} Live refresh unavailable; showing snapshot.`;
+            }
+          });
           console.error(error);
         }
       }
