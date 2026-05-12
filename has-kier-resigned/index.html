@@ -390,6 +390,15 @@
 
     <script>
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
+      const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
+      const ANNOUNCEMENT_SEARCH_PHRASES = [
+        "\"Keir Starmer\" \"will resign\"",
+        "\"Keir Starmer\" \"is resigning\"",
+        "\"Keir Starmer\" \"has resigned\"",
+        "\"Keir Starmer\" \"stand down\"",
+        "\"Keir Starmer\" \"step down\"",
+        "\"Keir Starmer\" \"resignation\"",
+      ];
       const LABOUR_MP_CALL_COUNT = 85;
       const LABOUR_MP_COUNT_AS_OF = "12 May 2026 11:20 UTC";
       const STARTED_AS_PM = new Date("2024-07-05T00:00:00+01:00");
@@ -450,6 +459,39 @@
         return person?.title || "Not listed";
       }
 
+      function buildGovSearchUrl(query) {
+        const url = new URL(GOVUK_SEARCH_URL);
+        url.searchParams.set("q", query);
+        url.searchParams.set("count", "3");
+        url.searchParams.append("filter_organisations[]", "prime-ministers-office-10-downing-street");
+        return url;
+      }
+
+      function looksLikeResignationAnnouncement(result) {
+        const text = `${result?.title || ""} ${result?.description || ""}`.toLowerCase();
+        const hasResignationLanguage = /\b(resign|resignation|stand down|step down)\b/.test(text);
+        const hasFutureOrConfirmedLanguage = /\b(will|is|has|announc|confirm|set out|timetable)\b/.test(text);
+        const isDenial = /\b(will not|won't|no intention|not resign|not going to resign)\b/.test(text);
+        return hasResignationLanguage && hasFutureOrConfirmedLanguage && !isDenial;
+      }
+
+      async function findOfficialAnnouncement() {
+        const searches = ANNOUNCEMENT_SEARCH_PHRASES.map(async (phrase) => {
+          const response = await fetch(buildGovSearchUrl(phrase), { cache: "no-store" });
+          if (!response.ok) return null;
+
+          const payload = await response.json();
+          return (payload.results || []).find(looksLikeResignationAnnouncement) || null;
+        });
+
+        try {
+          const results = await Promise.all(searches);
+          return results.find(Boolean) || null;
+        } catch {
+          return null;
+        }
+      }
+
       function updateStaticMetrics() {
         elements.mpCount.textContent = LABOUR_MP_CALL_COUNT.toLocaleString("en-GB");
         elements.daysInOffice.textContent = getDaysInOffice().toLocaleString("en-GB");
@@ -462,7 +504,11 @@
         updateStaticMetrics();
 
         try {
-          const response = await fetch(PM_ROLE_URL, { cache: "no-store" });
+          const [response, officialAnnouncement] = await Promise.all([
+            fetch(PM_ROLE_URL, { cache: "no-store" }),
+            findOfficialAnnouncement(),
+          ]);
+
           if (!response.ok) {
             throw new Error(`GOV.UK returned ${response.status}`);
           }
@@ -478,6 +524,17 @@
           elements.roleHolder.textContent = name;
           elements.startedOn.textContent = formatDate(startedOn || STARTED_AS_PM);
           elements.lastChecked.textContent = formatDateTime(new Date());
+
+          if (officialAnnouncement) {
+            elements.pmStatus.textContent = "Official resignation announcement found";
+            setAnswer(
+              "resigned",
+              "Yes",
+              "GOV.UK announcement detected",
+              `GOV.UK has a Number 10 result matching an official resignation announcement: "${officialAnnouncement.title}".`
+            );
+            return;
+          }
 
           if (isCurrent && isStarmer && !endedOn) {
             elements.pmStatus.textContent = "Still listed as current Prime Minister";
