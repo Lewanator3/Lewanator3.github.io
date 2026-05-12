@@ -691,6 +691,7 @@
         "https://www.gov.uk/api/content/government/people/miatta-fahnbulleh",
         "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/alex-davies-jones",
+        "https://www.gov.uk/api/content/government/people/zubir-ahmed",
       ];
       const PERSON_NAME_PATTERN = "[A-Z][A-Za-z'\\u2019-]+(?:[-\\s][A-Z][A-Za-z'\\u2019-]+){1,3}";
       const ROLE_NEWS_SOURCE_NAME = "PA via Irish Examiner";
@@ -705,6 +706,7 @@
         "miatta-fahnbulleh": { date: "2026-05-12", sequence: 1 },
         "jess-phillips": { date: "2026-05-12", sequence: 2 },
         "alex-davies-jones": { date: "2026-05-12", sequence: 3 },
+        "zubir-ahmed": { date: "2026-05-12", sequence: 4 },
       };
       const POLYMARKET_MARKETS = [
         {
@@ -887,7 +889,10 @@
         if (!trackerState.labourListText) return [];
 
         const ministerPattern = /\b([A-Z][A-Za-z'’-]+(?:[-\s][A-Z][A-Za-z'’-]+){1,3})\s+\([^)]+\)\s+\1\s+(?:has\s+)?resigned as (?:a|an) (?:government|junior) minister/gi;
-        const names = [...trackerState.labourListText.matchAll(ministerPattern)]
+        const names = [...trackerState.labourListText.matchAll(new RegExp(
+          `\\b(${PERSON_NAME_PATTERN})\\s+\\([^)]+\\)\\s+\\1\\s+(?:has\\s+)?resigned as (?:a|an) [^.]{0,80}?minister\\b`,
+          "gi"
+        ))]
           .map((match) => match[1])
           .filter(Boolean);
 
@@ -902,7 +907,7 @@
           ? appointment.title.replace(`${personTitle} - `, "")
           : role?.title || appointment.title.replace(`${personTitle} - `, "");
         return {
-          name: personTitle.replace(/^The Rt Hon\s+/i, "").replace(/\s+MP$/i, ""),
+          name: personTitle.replace(/^(?:The Rt Hon\s+|Dr\s+)/i, "").replace(/\s+MP$/i, ""),
           title: roleTitle,
           endedOn: appointment?.details?.ended_on,
           source: "GOV.UK",
