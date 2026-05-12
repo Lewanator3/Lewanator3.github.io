@@ -471,11 +471,11 @@
 
         <article class="panel">
           <h2>Polymarket odds</h2>
-          <strong class="panel-number" id="polyOdds">...</strong>
+          <strong class="panel-number" id="polyOdds">41.5%</strong>
           <p class="panel-copy" id="polyQuestion">
-            Loading public Polymarket market data.
+            Starmer out by June 30, 2026?
           </p>
-          <span class="panel-meta" id="polyMeta">Gamma API</span>
+          <span class="panel-meta" id="polyMeta">Yes price snapshot: bid 0.41, ask 0.42, volume $2,825,067. Refreshes via Gamma API.</span>
         </article>
 
         <article class="panel wide-panel">
@@ -627,18 +627,32 @@
         }
       }
 
+      async function fetchWithTimeout(url, timeoutMs) {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+        try {
+          return await fetch(url, {
+            cache: "no-store",
+            signal: controller.signal,
+          });
+        } finally {
+          window.clearTimeout(timeoutId);
+        }
+      }
+
       async function updatePolymarket() {
         try {
           let response;
 
           try {
-            response = await fetch(POLYMARKET_DIRECT_URL, { cache: "no-store" });
+            response = await fetchWithTimeout(POLYMARKET_DIRECT_URL, 3000);
           } catch {
-            response = await fetch(POLYMARKET_PROXY_URL, { cache: "no-store" });
+            response = await fetchWithTimeout(POLYMARKET_PROXY_URL, 12000);
           }
 
           if (!response.ok) {
-            response = await fetch(POLYMARKET_PROXY_URL, { cache: "no-store" });
+            response = await fetchWithTimeout(POLYMARKET_PROXY_URL, 12000);
           }
 
           if (!response.ok) throw new Error(`Polymarket returned ${response.status}`);
