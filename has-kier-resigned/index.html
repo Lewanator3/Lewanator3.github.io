@@ -637,15 +637,15 @@
               <strong class="role-count" id="roleCount">...</strong>
             </div>
             <ul class="role-list" id="roleList">
-              <li><span class="role-name">Checking sources</span><span class="role-title">GOV.UK, LabourList and ITV News</span></li>
+              <li><span class="role-name">Checking sources</span><span class="role-title">GOV.UK, LabourList and role-news source</span></li>
             </ul>
             <span class="panel-meta" id="roleMeta">Loading role-resignation tracker.</span>
           </article>
 
           <div class="news-grid" aria-label="News pulse">
             <article class="news-card">
-              <span class="news-source">ITV News</span>
-              <p id="itvNewsText">Loading ITV pressure tracker.</p>
+              <span class="news-source">Role News</span>
+              <p id="roleNewsText">Loading role-resignation news tracker.</p>
             </article>
             <article class="news-card">
               <span class="news-source">LabourList</span>
@@ -670,7 +670,7 @@
         <a href="https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/" rel="noopener" target="_blank">LabourList tracker</a>,
         parsed live in the browser.
         Role-resignation news source:
-        <a href="https://www.itv.com/news/2026-05-11/top-aides-quit-and-join-dozens-of-labour-mps-calling-for-starmer-to-resign" rel="noopener" target="_blank">ITV News</a>.
+        <a href="https://www.irishexaminer.com/world/arid-41843286.html" rel="noopener" target="_blank">PA via Irish Examiner</a>.
         Market source:
         <a href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">Polymarket</a>.
       </footer>
@@ -680,8 +680,8 @@
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
       const LABOURLIST_TRACKER_URL = "https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/";
-      const ITV_PRESSURE_URL = "https://www.itv.com/news/2026-05-11/top-aides-quit-and-join-dozens-of-labour-mps-calling-for-starmer-to-resign";
-      const ITV_PRESSURE_READER_URL = `https://r.jina.ai/http://r.jina.ai/http://${ITV_PRESSURE_URL}`;
+      const ROLE_NEWS_URL = "https://www.irishexaminer.com/world/arid-41843286.html";
+      const ROLE_NEWS_READER_URL = `https://r.jina.ai/http://r.jina.ai/http://${ROLE_NEWS_URL}`;
       const POLYMARKET_EVENT_DIRECT_URL = "https://gamma-api.polymarket.com/events?slug=starmer-out-in-2025";
       const POLYMARKET_EVENT_PROXY_URLS = [
         `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(POLYMARKET_EVENT_DIRECT_URL)}`,
@@ -707,6 +707,14 @@
         {
           name: "Tom Rutland",
           title: "PPS to Environment Secretary Emma Reynolds",
+        },
+        {
+          name: "Gordon McKee",
+          title: "Department for Work and Pensions PPS",
+        },
+        {
+          name: "Sally Jameson",
+          title: "PPS to Home Secretary Shabana Mahmood",
         },
       ];
       const POLYMARKET_MARKETS = [
@@ -742,7 +750,7 @@
         labourMpCount: null,
         labourListLine: "",
         labourListText: "",
-        itvText: "",
+        roleNewsText: "",
       };
 
       const elements = {
@@ -760,7 +768,7 @@
         roleCount: document.getElementById("roleCount"),
         roleList: document.getElementById("roleList"),
         roleMeta: document.getElementById("roleMeta"),
-        itvNewsText: document.getElementById("itvNewsText"),
+        roleNewsText: document.getElementById("roleNewsText"),
         labourListText: document.getElementById("labourListText"),
         govNewsText: document.getElementById("govNewsText"),
         marketNewsText: document.getElementById("marketNewsText"),
@@ -911,7 +919,7 @@
 
         const start = Math.max(0, index - 450);
         const context = text.slice(start, index + 900);
-        return /\b(resigned|resigning|resign|stepped down|quit)\b/i.test(context);
+        return /\b(resigned|resigning|resign|stepped down|quit|left (?:their|his|her) posts?)\b/i.test(context);
       }
 
       function firstMatchingSentence(text, patterns) {
@@ -921,13 +929,13 @@
         )?.trim() || "";
       }
 
-      async function getItvRoleResignations() {
+      async function getNewsRoleResignations() {
         try {
-          const response = await fetchWithTimeout(ITV_PRESSURE_READER_URL, 12000);
-          if (!response.ok) throw new Error(`ITV reader returned ${response.status}`);
+          const response = await fetchWithTimeout(ROLE_NEWS_READER_URL, 12000);
+          if (!response.ok) throw new Error(`Role news reader returned ${response.status}`);
 
           const text = normaliseText(await response.text());
-          trackerState.itvText = text;
+          trackerState.roleNewsText = text;
 
           const found = NEWS_ROLE_PATTERNS
             .filter((item) => hasResignationContext(text, item.name))
@@ -935,17 +943,16 @@
               name: item.name,
               title: item.title,
               endedOn: null,
-              source: "ITV News",
+              source: "PA via Irish Examiner",
             }));
 
-          const sentence = firstMatchingSentence(text, [
-            /four government aides/i,
-            /resigned/i,
-          ]);
-          elements.itvNewsText.textContent = sentence || `${found.length} PPS resignation${found.length === 1 ? "" : "s"} refreshed from ITV News.`;
+          const names = found.map((item) => item.name).join(", ");
+          elements.roleNewsText.textContent = names
+            ? `${found.length} PPS/aide departure${found.length === 1 ? "" : "s"} detected in PA copy: ${names}.`
+            : "No PPS/aide departures detected in the role-news source.";
           return found;
         } catch (error) {
-          elements.itvNewsText.textContent = "Could not refresh ITV News from this browser.";
+          elements.roleNewsText.textContent = "Could not refresh role-resignation news from this browser.";
           console.error(error);
           return [];
         }
@@ -984,11 +991,11 @@
       }
 
       async function updateRoleResignations() {
-        const [govItems, itvItems] = await Promise.all([
+        const [govItems, newsItems] = await Promise.all([
           getGovRoleResignations(),
-          getItvRoleResignations(),
+          getNewsRoleResignations(),
         ]);
-        renderRoleResignations([...govItems, ...itvItems]);
+        renderRoleResignations([...govItems, ...newsItems]);
       }
 
       function asArray(value) {
