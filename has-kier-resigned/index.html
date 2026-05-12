@@ -503,7 +503,8 @@
     <script>
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
-      const POLYMARKET_URL = "https://gamma-api.polymarket.com/markets?slug=starmer-out-by-june-30-2026-862-594-548";
+      const POLYMARKET_DIRECT_URL = "https://gamma-api.polymarket.com/markets?slug=starmer-out-by-june-30-2026-862-594-548";
+      const POLYMARKET_PROXY_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(POLYMARKET_DIRECT_URL)}`;
       const ANNOUNCEMENT_SEARCH_PHRASES = [
         "\"Keir Starmer\" \"will resign\"",
         "\"Keir Starmer\" \"is resigning\"",
@@ -628,7 +629,18 @@
 
       async function updatePolymarket() {
         try {
-          const response = await fetch(POLYMARKET_URL, { cache: "no-store" });
+          let response;
+
+          try {
+            response = await fetch(POLYMARKET_DIRECT_URL, { cache: "no-store" });
+          } catch {
+            response = await fetch(POLYMARKET_PROXY_URL, { cache: "no-store" });
+          }
+
+          if (!response.ok) {
+            response = await fetch(POLYMARKET_PROXY_URL, { cache: "no-store" });
+          }
+
           if (!response.ok) throw new Error(`Polymarket returned ${response.status}`);
 
           const markets = await response.json();
