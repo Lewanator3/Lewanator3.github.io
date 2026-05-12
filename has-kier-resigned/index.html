@@ -155,6 +155,74 @@
         align-items: center;
       }
 
+      .intel-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(260px, 0.95fr);
+        gap: 18px;
+        margin-top: 28px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        padding: 18px;
+      }
+
+      .panel h2 {
+        margin: 0 0 12px;
+        font-size: 1.05rem;
+        line-height: 1.25;
+      }
+
+      .panel-number {
+        display: block;
+        margin-bottom: 8px;
+        font-size: clamp(2.6rem, 8vw, 4.5rem);
+        font-weight: 900;
+        line-height: 0.95;
+      }
+
+      .panel-copy {
+        margin: 0;
+        color: #303844;
+        line-height: 1.5;
+      }
+
+      .role-list,
+      .news-list {
+        display: grid;
+        gap: 10px;
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .role-list li,
+      .news-list li {
+        border-top: 1px solid var(--line);
+        padding-top: 10px;
+        color: #303844;
+        line-height: 1.42;
+      }
+
+      .role-list strong,
+      .news-list strong {
+        color: var(--ink);
+      }
+
+      .panel-meta {
+        display: block;
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 720;
+      }
+
+      .wide-panel {
+        grid-column: 1 / -1;
+      }
+
       button,
       .source-link {
         min-height: 44px;
@@ -295,6 +363,10 @@
         .person-panel {
           max-width: 420px;
         }
+
+        .intel-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -379,18 +451,59 @@
         </aside>
       </section>
 
+      <section class="intel-grid" aria-label="Pressure tracker">
+        <article class="panel">
+          <h2>Government roles quit</h2>
+          <strong class="panel-number">5</strong>
+          <p class="panel-copy">
+            Labour MPs who have resigned government or PPS roles while joining
+            calls for Starmer to quit or set a departure timetable.
+          </p>
+          <ul class="role-list">
+            <li><strong>Miatta Fahnbulleh</strong> - Faith and Communities Minister.</li>
+            <li><strong>Melanie Ward</strong> - PPS to David Lammy.</li>
+            <li><strong>Joe Morris</strong> - PPS to Health Secretary Wes Streeting.</li>
+            <li><strong>Naushabah Khan</strong> - Cabinet Office PPS.</li>
+            <li><strong>Tom Rutland</strong> - PPS to Environment Secretary Emma Reynolds.</li>
+          </ul>
+          <span class="panel-meta">Sources: ITV News, Sky News and AP, checked 12 May 2026.</span>
+        </article>
+
+        <article class="panel">
+          <h2>Polymarket odds</h2>
+          <strong class="panel-number" id="polyOdds">...</strong>
+          <p class="panel-copy" id="polyQuestion">
+            Loading public Polymarket market data.
+          </p>
+          <span class="panel-meta" id="polyMeta">Gamma API</span>
+        </article>
+
+        <article class="panel wide-panel">
+          <h2>News pulse</h2>
+          <ul class="news-list">
+            <li><strong>Sky News:</strong> reports 80 Labour MPs calling for Starmer to resign and says Starmer told Cabinet he would not resign.</li>
+            <li><strong>LabourList:</strong> reports 85 Labour MPs calling for resignation or a timetable as of 11.20am on Tuesday 12 May.</li>
+            <li><strong>ITV News:</strong> reports four government aides resigned and names the PPS roles they left.</li>
+            <li><strong>AP:</strong> reports Starmer told Cabinet he has no intention of resigning.</li>
+          </ul>
+        </article>
+      </section>
+
       <footer>
         Official status source:
         <a href="https://www.gov.uk/api/content/government/ministers/prime-minister" rel="noopener" target="_blank">GOV.UK Content API</a>.
         Labour MP count source:
         <a href="https://labourlist.org/2026/05/labourlist-labour-mp-starmer-resignation-tracker/" rel="noopener" target="_blank">LabourList tracker</a>,
         which reported 85 Labour MPs as of 11.20am on Tuesday 12 May 2026.
+        Market source:
+        <a href="https://polymarket.com/event/starmer-out-in-2025?marketSlug=starmer-out-by-june-30-2026-862-594-548" rel="noopener" target="_blank">Polymarket</a>.
       </footer>
     </main>
 
     <script>
       const PM_ROLE_URL = "https://www.gov.uk/api/content/government/ministers/prime-minister";
       const GOVUK_SEARCH_URL = "https://www.gov.uk/api/search.json";
+      const POLYMARKET_URL = "https://gamma-api.polymarket.com/markets?slug=starmer-out-by-june-30-2026-862-594-548";
       const ANNOUNCEMENT_SEARCH_PHRASES = [
         "\"Keir Starmer\" \"will resign\"",
         "\"Keir Starmer\" \"is resigning\"",
@@ -416,6 +529,9 @@
         pmStatus: document.getElementById("pmStatus"),
         countSource: document.getElementById("countSource"),
         lastChecked: document.getElementById("lastChecked"),
+        polyOdds: document.getElementById("polyOdds"),
+        polyQuestion: document.getElementById("polyQuestion"),
+        polyMeta: document.getElementById("polyMeta"),
       };
 
       function formatDate(value) {
@@ -498,6 +614,43 @@
         elements.countSource.textContent = `LabourList, checked ${LABOUR_MP_COUNT_AS_OF}`;
       }
 
+      function asArray(value) {
+        if (Array.isArray(value)) return value;
+        if (typeof value !== "string") return [];
+
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      async function updatePolymarket() {
+        try {
+          const response = await fetch(POLYMARKET_URL, { cache: "no-store" });
+          if (!response.ok) throw new Error(`Polymarket returned ${response.status}`);
+
+          const markets = await response.json();
+          const market = markets[0];
+          const outcomes = asArray(market?.outcomes);
+          const prices = asArray(market?.outcomePrices).map(Number);
+          const yesIndex = outcomes.findIndex((outcome) => /^yes$/i.test(outcome));
+          const yesPrice = prices[yesIndex];
+
+          if (!Number.isFinite(yesPrice)) throw new Error("No yes price");
+
+          elements.polyOdds.textContent = `${(yesPrice * 100).toFixed(1)}%`;
+          elements.polyQuestion.textContent = market.question || "Starmer out by June 30, 2026?";
+          elements.polyMeta.textContent = `Yes price. Bid ${market.bestBid || "n/a"}, ask ${market.bestAsk || "n/a"}, volume $${Number(market.volume || 0).toLocaleString("en-GB", { maximumFractionDigits: 0 })}.`;
+        } catch (error) {
+          elements.polyOdds.textContent = "?";
+          elements.polyQuestion.textContent = "Polymarket data could not be loaded.";
+          elements.polyMeta.textContent = "Gamma API unavailable from this browser.";
+          console.error(error);
+        }
+      }
+
       async function checkStatus() {
         elements.refresh.disabled = true;
         elements.badge.textContent = "Checking GOV.UK";
@@ -572,7 +725,9 @@
 
       elements.refresh.addEventListener("click", checkStatus);
       checkStatus();
+      updatePolymarket();
       window.setInterval(checkStatus, FIVE_MINUTES);
+      window.setInterval(updatePolymarket, FIVE_MINUTES);
     </script>
   </body>
 </html>
