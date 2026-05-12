@@ -690,6 +690,7 @@
       const ROLE_SOURCE_PEOPLE = [
         "https://www.gov.uk/api/content/government/people/jess-phillips",
         "https://www.gov.uk/api/content/government/people/miatta-fahnbulleh",
+        "https://www.gov.uk/api/content/government/people/alex-davies-jones",
       ];
       const NEWS_ROLE_PATTERNS = [
         {
@@ -876,6 +877,28 @@
         }
       }
 
+      function slugifyPersonName(name) {
+        return name
+          .toLowerCase()
+          .normalize("NFKD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      }
+
+      function getLabourListMinisterUrls() {
+        if (!trackerState.labourListText) return [];
+
+        const ministerPattern = /\b([A-Z][A-Za-z'’-]+(?:[-\s][A-Z][A-Za-z'’-]+){1,3})\s+\([^)]+\)\s+\1\s+(?:has\s+)?resigned as (?:a|an) (?:government|junior) minister/gi;
+        const names = [...trackerState.labourListText.matchAll(ministerPattern)]
+          .map((match) => match[1])
+          .filter(Boolean);
+
+        return names.map((name) =>
+          `https://www.gov.uk/api/content/government/people/${slugifyPersonName(name)}`
+        );
+      }
+
       function roleFromAppointment(personTitle, appointment) {
         const role = appointment?.links?.role?.[0];
         const roleTitle = typeof role === "string"
@@ -890,8 +913,13 @@
       }
 
       async function getGovRoleResignations() {
+        const peopleUrls = [...new Set([
+          ...ROLE_SOURCE_PEOPLE,
+          ...getLabourListMinisterUrls(),
+        ])];
+
         const people = await Promise.all(
-          ROLE_SOURCE_PEOPLE.map(async (url) => {
+          peopleUrls.map(async (url) => {
             const response = await fetchWithTimeout(url, 8000);
             if (!response.ok) return [];
 
